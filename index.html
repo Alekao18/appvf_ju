@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aplicativo de Estatística</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#2563EB">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="container">
+    <div class="header-wrapper">
+      <div>
+        <h1>📊 Aplicativo de Estatística</h1>
+        <p id="headerSubtitulo" class="muted">Escolha o método de Cálculo.</p>
+      </div>
+
+      <div id="botoesHeader" style="display: none;">
+        <button id="btnLimpar" class="btn secondary">Limpar</button>
+        <button id="btnHome" class="btn secondary">Home</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tela inicial -->
+  <main class="container" id="telaInicial">
+    <section class="card" style="text-align:center">
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:8px;">
+        <button id="btnThemeToggleInitial" class="btn btn-sm ghost" data-theme-toggle title="Alternar tema" aria-label="Alternar tema" aria-pressed="false">🌙</button>
+      </div>
+      <h2>Selecione o método de Cálculo</h2>
+      <div class="btn-group">
+        <button id="btnEscolherDiscreto" class="btn">Agrupamento Discreto</button>
+        <button id="btnEscolherClasses" class="btn">Agrupamento por Classes</button>
+        <button id="btnEscolherContinuas" class="btn">Variaveis Aleatórias Contínuas</button>
+        <button id="btnEscolherVAD" class="btn">Variaveis Aleatórias Discretas</button>
+        <!--<button id="btnEscolherDP" class="btn">Distribuição de Poisson</button>-->
+        <button id="btnEscolherRG" class="btn">Regressão Linear</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Conteúdo Agrupamento Discreto -->
+  <main class="container" id="conteudoDiscreto" style="display:none">
+    <!-- Entrada -->
+    <section class="card">
+      <div class="grid-3">
+        <div>
+          <label class="lbl">Rótulo da variável</label>
+          <input id="rotuloVar" class="inp" value="Temperatura [°C]" />
+        </div>
+        <div>
+          <label class="lbl">Unidade (opcional)</label>
+          <input id="unidadeVar" class="inp" value="°C" />
+        </div>
+        <div>
+          <label class="lbl">Tipo de variância / DP</label>
+          <select id="tipoVar" class="inp">
+            <option>Amostral (÷ N-1)</option>
+            <option>Populacional (÷ N)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <label class="lbl">Cole os dados</label>
+          <textarea id="entradaBruta" class="inp" rows="6"></textarea>
+          <div style="margin-top:8px;">
+            <input type="checkbox" id="isTabelaFreq" style="width:auto;"/>
+            <label for="isTabelaFreq">Os dados colados são uma tabela de Frequência (Xi Fi)?</label>
+          </div>
+        </div>
+        <div>
+          <label class="lbl">ou envie CSV (uma coluna numérica)</label>
+          <input id="arquivoCSV" type="file" accept=".csv,text/csv" />
+          <div id="csvPreview" class="preview muted small">Nenhum arquivo selecionado.</div>
+        </div>
+      </div>
+
+      <button id="btnProcessar" class="btn">Processar dados</button>
+      <span id="nInfo" class="tag"></span>
+    </section>
+
+    <!-- Abas -->
+    <section class="tabs">
+      <nav class="tablist" id="tablist">
+        <button class="tab active" data-tab="tab-base">Dados & Tabela Base</button>
+        <button class="tab" data-tab="tab-freq">Frequências</button>
+        <button class="tab" data-tab="tab-media">Média</button>
+        <button class="tab" data-tab="tab-mediana">Mediana</button>
+        <button class="tab" data-tab="tab-moda">Moda</button>
+      </nav>
+
+      <section id="tab-base" class="tabpanel active">
+        <h2>Dados (crescente)</h2>
+        <div id="dadosOrdenados" class="mono"></div>
+        <h3>Tabela base</h3>
+        <div id="tabelaBase"></div>
+      </section>
+
+      <section id="tab-freq" class="tabpanel">
+        <h2>Frequências</h2>
+        <div id="tabelaFreq"></div>
+        <h3>Posições</h3>
+        <div id="tabelaPosicoes"></div>
+      </section>
+
+      <section id="tab-media" class="tabpanel">
+        <h2>Média</h2>
+        <div id="kpiMedia" class="kpiRow"></div>
+      </section>
+
+      <section id="tab-mediana" class="tabpanel">
+        <h2>Mediana</h2>
+        <div id="kpiMediana" class="kpiRow"></div>
+      </section>
+
+      <section id="tab-moda" class="tabpanel">
+        <h2>Moda</h2>
+        <div id="kpiModa" class="kpiRow"></div>
+      </section>
+
+      <section id="tab-disp" class="tabpanel">
+        <h2>Dispersão</h2>
+        <div id="kpiDisp" class="kpiRow"></div>
+      </section>
+    </section>
+  </main>
+
+  <!-- Conteúdo Agrupamento em Classes -->
+  <main class="container" id="conteudoClasses" style="display:none">
+    <section class="card">
+      <h2>Agrupamento por Classes</h2>
+  
+      <label class="lbl">Selecione o nº de classes para importar:</label>
+      <select id="numClasses" class="inp" style="margin-bottom: 16px;">
+        <option value="3">3 classes</option>
+        <option value="5" selected>5 classes</option>
+        <option value="7">7 classes</option>
+      </select>
+
+      <label class="lbl">Importar do CSV (Li,Ls,fi)</label>
+      <input id="arquivoClassesCSV" type="file" accept=".csv,text/csv" />
+      <div id="csvClassesPreview" class="preview muted small">Nenhum arquivo selecionado.</div>
+
+      <label class="lbl" style="margin-top:12px;">Ou cole a tabela (Li Ls fi, separados por espaço):</label>
+      <textarea id="entradaTabelaClasses" class="inp" rows="6"></textarea>
+      <button id="btnTabelaManual" class="btn">Processar Tabela</button>
+    </section>
+
+    <section class="tabs">
+      <nav class="tablist" id="tablistClasses">
+        <button class="tab active" data-tab="tab-amplitude">Amplitude</button>
+        <button class="tab" data-tab="tab-pontoMedio">Ponto Médio</button>
+      </nav>
+
+      <section id="tab-amplitude" class="tabpanel active">
+        <h2>Amplitude da Classe</h2>
+        <div id="tabelaAmplitude"></div>
+      </section>
+
+      <section id="tab-pontoMedio" class="tabpanel">
+        <h2>Ponto Médio</h2>
+        <div id="tabelaPontoMedio"></div>
+      </section>
+    </section>
+  </main>
+
+  <main class="container" id="conteudoContinuas" style="display:none">
+    <section class="card" style="text-align:center">
+      <h2>Variáveis Aleatórias Contínuas</h2>
+      <p class="muted">Selecione o tipo de cálculo de distribuição contínua.</p>
+      <div class="btn-group">
+        <button id="btnEscolherNormalCalc" class="btn">Distribuição Normal</button>
+        <button id="btnEscolherExponencial" class="btn">Exponencial</button>
+        <button id="btnEscolherUniforme" class="btn">Uniforme</button>
+      </div>
+    </section>
+  </main>
+
+  <main class="container" id="conteudoNormalCalc" style="display:none">
+    <section class="card">
+      <button id="btnVerTabela" class="btn ghost">Ver Tabela Z</button>
+      <div class="grid-3">
+        <div>
+          <label class="lbl">Valor (X) ou (a)</label>
+          <input  id="zInputX" class="inp" type="number">
+        </div>
+        <div>
+          <label class="lbl">Valor (b)</label>
+          <input  id="zInputX2" class="inp" type="number">
+        </div>
+      </div> 
+      
+      <div class="grid-4">
+        <div>
+          <label class="lbl">Média de Amostra(μ)</label>
+          <input id="zInputMedia" class="inp" type="number">
+        </div> 
+        <div>
+          <label class="lbl">Desvio Padrão (S)</label>
+          <input id="zInputDesvioPadrao" class="inp" type="number">
+        </div>
+        <div>
+          <label class="lbl">Tamanho Amostra (N)</label>
+          <input id="zInputAmostra" class="inp" type="number">
+        </div>
+      </div>
+    </section>
+    <button id="btnProcessarZ" class="btn">Processar Dados</button>
+    <span id="nInfoZ" class="tag"></span>
+
+<section class="tabs">
+  <nav class="tablist" id="tablistNormal">
+    <button class="tab active" data-tab="tab-zscore">Resultado (Z-Score)</button>
+    <button class="tab" data-tab="tab-caso-1">1ºCaso</button>
+    <button class="tab" data-tab="tab-caso-2">2ºCaso</button>
+    <button class="tab" data-tab="tab-caso-3">3ºCaso</button>
+    <button class="tab" data-tab="tab-caso-4">4ºCaso</button>
+    <button class="tab" data-tab="tab-caso-5">5ºCaso</button>
+    <button class="tab" data-tab="tab-caso-6">6ºCaso</button>
+    <button class="tab" data-tab="tab-caso-7">7ºCaso</button>
+  </nav>
+
+  <section id="tab-zscore" class="tabpanel active">
+    <h2>Valor de Z (Z-Score)</h2>
+    <p>O valor de Z calculado com base nos seus dados de amostra.</p>
+    <div id="kpiZScore" class="kpiRow"></div>
+  </section>
+
+  <section id="tab-caso-1" class="tabpanel">
+    <h2>1º Caso: P(z &gt;= a) = P(z &lt; a)</h2>
+    <div id="kpiCaso1" class="kpiRow"></div>
+  </section>
+
+  <section id="tab-caso-2" class="tabpanel">
+    <h2>2º Caso: P(z &lt;= a) = P(z &lt; a)</h2>
+    <div id="kpiCaso2" class="kpiRow"></div>
+  </section>
+
+  <section id="tab-caso-3" class="tabpanel">
+    <h2>3º Caso: P(a &lt; z &lt;= b) = P(a &lt; z &lt; b)</h2>
+    <div id="kpiCaso3" class="kpiRow"></div>
+  </section>
+
+  <section id="tab-caso-4" class="tabpanel">
+    <h2>4º Caso: P(z &lt;= -a)</h2>
+    <div id="kpiCaso4" class="kpiRow"></div>
+  </section>
+
+  <section id="tab-caso-5" class="tabpanel">
+    <h2>5º Caso: P(z &gt; -a) = P(z &gt;= -a)</h2>
+    <div id="kpiCaso5" class="kpiRow"></div>
+  </section>
+
+  <section id="tab-caso-6" class="tabpanel">
+    <h2>6º Caso: P(-a &lt; z &lt;= b) = P(-a &lt; z &lt; b)</h2>
+    <div id="kpiCaso6" class="kpiRow"></div>
+  </section>
+
+  <section id="tab-caso-7" class="tabpanel">
+    <h2>7º Caso: P(-a &lt; z &lt; b) = P(-a &lt; z &lt; b)</h2>
+    <div id="kpiCaso7" class="kpiRow"></div>
+  </section>
+</section>
+  </main>
+
+  <div id="modalTabelaZ" class="modal-backdrop">
+    <div class="modal-content">
+      <span id="modalClose" class="modal-close">&times;</span>
+      <h2>Tabela Z Acumulada - P(Z < z)</h2>
+      <p class="muted small">Valores representam a área à esquerda (probabilidade acumulada) do valor Z.</p>
+      <div id="tabelaZContainer" class="tabela-z-container">
+        </div>
+      <div class="modal-footer">
+        <p><b>Exemplo:</b> Para Z = 1.64, procure 1.6 na linha e 0.04 na coluna. O valor é 0.9495 (ou 94.95%). [cite: 18]</p>
+      </div>
+    </div>
+  </div>
+
+  <main class="container" id="conteudoExponencial" style="display:none">
+    <section class="card">
+      <h2>Distribuição Exponencial</h2>
+      <div class="grid-2">
+        <div>
+          <label class="lbl">Taxa Média de Ocorrência (λ)</label>
+          <input id="expInputLambda" class="inp" type="number" placeholder="Ex: Insira o valor da lambda">
+        </div>
+        <div>
+          <label class="lbl">Valor (a)</label>
+          <input id="expInputX" class="inp" type="number" placeholder="Ex: Insira o valor de a">
+        </div>
+        <div>
+          <label class="lbl">Valor (b)</label>
+          <input id="expInputX2" class="inp" type="number" placeholder="Ex: Insira o valor de b">
+        </div>
+      </div>
+      <button id="btnProcessarExp" class="btn">Processar</button>
+    </section>
+
+    <section class="tabs" id="tabsExponencial" style="display:none;">
+      <nav class="tablist" id="tablistExp">
+        <button class="tab active" data-tab="tab-exp-probs">Probabilidades</button>
+        <button class="tab" data-tab="tab-exp-medidas">Medidas</button>
+      </nav>
+
+      <section id="tab-exp-probs" class="tabpanel active">
+        <h2>Probabilidades</h2>
+        <p class="muted small">Probabilidades calculadas para a = <span id="expValX"></span></p>
+        <div id="kpiExpProbs" class="kpiRow"></div>
+      </section>
+
+      <section id="tab-exp-medidas" class="tabpanel">
+        <h2>Medidas da Distribuição</h2>
+        <p class="muted small">Medidas gerais baseadas em λ = <span id="expValLambda"></span></p>
+        <div id="kpiExpMedidas" class="kpiRow"></div>
+      </section>
+    </section>
+  </main>
+
+  <main class="container" id="conteudoUniforme" style="display:none">
+    <section class="card">
+      <h2>Distribuição Uniforme</h2>
+      <div class="grid-4">
+        <div>
+          <label class="lbl">Limite Inferior (a)</label>
+          <input id="uniInputA" class="inp" type="number" placeholder="Ex: 10">
+        </div>
+        <div>
+          <label class="lbl">Limite Superior (b)</label>
+          <input id="uniInputB" class="inp" type="number" placeholder="Ex: 20">
+        </div>
+        <div>
+          <label class="lbl">Início do Intervalo (x1)</label>
+          <input id="uniInputX1" class="inp" type="number" placeholder="Ex: 12">
+        </div>
+        <div>
+          <label class="lbl">Fim do Intervalo (x2)</label>
+          <input id="uniInputX2" class="inp" type="number" placeholder="Ex: 15">
+        </div>
+      </div>
+      <button id="btnProcessarUni" class="btn">Processar</button>
+    </section>
+
+    <section class="tabs" id="tabsUniforme" style="display:none;">
+      <nav class="tablist" id="tablistUni">
+        <button class="tab active" data-tab="tab-uni-prob">Probabilidade</button>
+        <button class="tab" data-tab="tab-uni-medidas">Medidas</button>
+      </nav>
+
+      <section id="tab-uni-prob" class="tabpanel active">
+        <h2>Probabilidade P(x1 < X < x2)</h2>
+        <p class="muted small">Probabilidade do valor cair entre x1 e x2.</p>
+        <div id="kpiUniProb" class="kpiRow"></div>
+      </section>
+
+      <section id="tab-uni-medidas" class="tabpanel">
+        <h2>Medidas da Distribuição</h2>
+        <p class="muted small">Medidas gerais baseadas em 'a' e 'b'.</p>
+        <div id="kpiUniMedidas" class="kpiRow"></div>
+      </section>
+    </section>
+  </main>
+
+  <main class="container" id="conteudoDiscretasMenu" style="display:none">
+    <section class="card" style="text-align:center">
+      <h2>Variáveis Aleatórias Discretas</h2>
+      <p class="muted">Selecione o tipo de cálculo de distribuição discreta.</p>
+      <div class="btn-group">
+        <button id="btnEscolherBinomial" class="btn">Distribuição Binomial</button>
+        <button id="btnEscolherPoissonMenu" class="btn">Distribuição de Poisson</button>
+      </div>
+    </section>
+  </main> 
+
+  <main class="container" id="conteudoVAD" style="display: none">
+    <section class="card">
+      <h2>Distribuição Binomial</h2>
+
+      <div class="grid-2">
+        <div>
+          <label class="lbl">Nº de Tentativas (N)</label>
+          <input id="binInputN" class="inp" type="number" placeholder="Ex: 7">
+        </div>
+        <div>
+          <label class="lbl">Prob. de Sucesso (p)</label>
+          <input id="binInputP" class="inp" type="number" step="0.01" placeholder="Ex: 0.57">
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-top: 12px;">
+        <div>
+          <label class="lbl">Tipo de Cálculo</label>
+          <select id="binTipoCalculo" class="inp">
+            <option value="igual">P(x = a)</option>
+            <option value="menor_igual">P(x ≤ a)</option>
+            <option value="menor">P(x < a)</option>
+            <option value="maior_igual">P(x ≥ a)</option>
+            <option value="maior">P(x > a)</option>
+            <option value="intervalo_fechado">P(a ≤ x ≤ b)</option>
+            <option value="intervalo_aberto">P(a < x < b)</option>
+            <option value="intervalo_aberto_fechado">P(a < x ≤ b)</option>
+            <option value="intervalo_fechado_aberto">P(a ≤ x < b)</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Valor (a)</label>
+          <input id="binInputA" class="inp" type="number" placeholder="Ex: 2">
+        </div>
+        <div id="binHolderB" style="display: none;">
+          <label class="lbl">Valor (b)</label>
+          <input id="binInputB" class="inp" type="number" placeholder="Ex: 5">
+        </div>
+      </div>
+      <button id="btnProcessarBin" class="btn">Processar</button>
+    </section>
+
+    <section class="tabs" id="tabsVAD" style="display:none;">
+    <nav class="tablist" id="tablistVAD">
+      <button class="tab active" data-tab="tab-bin-prob">Probabilidade P(x)</button>
+      <button class="tab" data-tab="tab-bin-media">Média (μ)</button>
+      <button class="tab" data-tab="tab-bin-var">Variância (σ²)</button>
+      <button class="tab" data-tab="tab-bin-desvio">Desvio Padrão (σ)</button>
+      <button class="tab" data-tab="tab-bin-cv">Coef. de Variação (CV)</button>
+    </nav>
+
+    <section id="tab-bin-prob" class="tabpanel active">
+      <h2>Probabilidade P(x)</h2>
+      <p class="muted small">A probabilidade de ocorrer 'x' sucessos em 'N' tentativas.</p>
+      <div id="kpiBinProb" class="kpiRow"></div>
+    </section>
+
+    <section id="tab-bin-media" class="tabpanel">
+      <h2>Média (μ) ou Valor Esperado</h2>
+      <p class="muted small">Fórmula: μ = N * p</p>
+      <div id="kpiBinMedia" class="kpiRow"></div>
+    </section>
+
+    <section id="tab-bin-var" class="tabpanel">
+      <h2>Variância (σ²)</h2>
+      <p class="muted small">Fórmula: σ² = N * p * q</p>
+      <div id="kpiBinVar" class="kpiRow"></div>
+    </section>
+
+    <section id="tab-bin-desvio" class="tabpanel">
+      <h2>Desvio Padrão (σ)</h2>
+      <p class="muted small">Fórmula: σ = √σ²</p>
+      <div id="kpiBinDesvio" class="kpiRow"></div>
+    </section>
+
+    <section id="tab-bin-cv" class="tabpanel">
+      <h2>Coeficiente de Variação (CV)</h2>
+      <p class="muted small">Fórmula: CV = (σ / μ) * 100</p>
+      <div id="kpiBinCV" class="kpiRow"></div>
+    </section>
+
+    </section>
+  </main>
+
+  <main class="container" id="conteudoPoisson" style="display:none">
+    <section class="card">
+      <h2>Distribuição de Poisson</h2>
+      <div>
+        <label class="lbl">Média de Ocorrências (λ)</label>
+        <input id="poiInputLambda" class="inp" type="number" placeholder="Ex: 5">
+      </div>
+
+      <div class="grid-3" style="margin-top: 12px;">
+        <div>
+          <label class="lbl">Tipo de Cálculo</label>
+          <select id="poiTipoCalculo" class="inp">
+            <option value="igual">P(x = a)</option>
+            <option value="menor_igual">P(x ≤ a)</option>
+            <option value="menor">P(x < a)</option>
+            <option value="maior_igual">P(x ≥ a)</option>
+            <option value="maior">P(x > a)</option>
+            <option value="intervalo_fechado">P(a ≤ x ≤ b)</option>
+            <option value="intervalo_aberto">P(a < x < b)</option>
+            <option value="intervalo_aberto_fechado">P(a < x ≤ b)</option>
+            <option value="intervalo_fechado_aberto">P(a ≤ x < b)</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Valor (a)</label>
+          <input id="poiInputA" class="inp" type="number" placeholder="Ex: 7">
+        </div>
+        <div id="poiHolderB" style="display: none;">
+          <label class="lbl">Valor (b)</label>
+          <input id="poiInputB" class="inp" type="number" placeholder="Ex: 10">
+        </div>
+      </div>
+      <button id="btnProcessarPoi" class="btn">Processar</button>
+    </section>
+
+    <section class="tabs" id="tabsPoisson" style="display:none;">
+      <nav class="tablist" id="tablistPoi">
+        <button class="tab active" data-tab="tab-poi-prob">Probabilidades</button>
+        <button class="tab" data-tab="tab-poi-medidas">Medidas</button>
+      </nav>
+
+      <section id="tab-poi-prob" class="tabpanel active">
+        <h2>Probabilidades para k = <span id="poiValK"></span></h2>
+        <div id="kpiPoiProbs" class="kpiRow"></div>
+      </section>
+
+      <section id="tab-poi-medidas" class="tabpanel">
+        <h2>Medidas da Distribuição</h2>
+        <p class="muted small">Medidas gerais baseadas em λ = <span id="poiValLambda"></span></p>
+        <div id="kpiPoiMedidas" class="kpiRow"></div>
+      </section>
+    </section>
+  </main>
+
+  <main class="container" id="conteudoRegressao" style="display:none">
+    <section class="card">
+      <h2>Regressão Linear</h2>
+      <div class="grid-2">
+        <div>
+          <label class="lbl">Valores de X (separados por espaço ou linha)</label>
+          <textarea id="regInputX" class="inp" rows="5"></textarea>
+        </div>
+        <div>
+          <label class="lbl">Valores de Y (na mesma ordem que X)</label>
+          <textarea id="regInputY" class="inp" rows="5"></textarea>
+        </div>
+      </div>
+      <button id="btnProcessarReg" class="btn">Processar</button>
+    </section>
+
+    <section class="tabs" id="tabsREG" style="display:none;">
+      <nav class="tablist" id="tablistRegressao">
+        <button class="tab active" data-tab="tab-reg-equacao">Equação e Coeficientes</button>
+        <button class="tab" data-tab="tab-reg-variacao">Valores da Variação</button>
+      </nav>
+
+      <section id="tab-reg-equacao" class="tabpanel active">
+        <h2>Equação da Reta e Coeficientes</h2>
+        <p>Abaixo estão os valores calculados para a reta de regressão $\hat{y} = a + bx$ e o coeficiente $r^2$.</p>
+        <div id="kpiRegEquacao" class="kpiRow">
+        </div>
+      </section>
+
+      <section id="tab-reg-grafico" class="tabpanel">
+        <h2>Diagrama de Dispersão</h2>
+        <div class="chart-wrapper">
+          <canvas id="graficoRegressao"></canvas>
+        </div>
+      </section>
+  
+      <section id="tab-reg-variacao" class="tabpanel">
+        <h2>Valores da Variação (Baseado nas suas notas)</h2>
+        <div id="kpiRegVariacao" class="kpiRow">
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="container muted small">Interface em português — arredondamento clássico (0–4 mantém, 5–9 sobe).</footer>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
