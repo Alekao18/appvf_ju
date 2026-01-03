@@ -181,7 +181,7 @@ header h1 { margin:0; font-size:1.4rem; display:flex; align-items:center; gap:10
 body.theme-dark {
   --bg: #0a0e1a;
   --card: #111827;
-  --text: #f8fafc;
+  --text: #000000;
   --muted: #cbd5e1;
   --border: rgba(255,255,255,0.12);
   --primary: #60a5fa;
@@ -197,6 +197,7 @@ body, .card, .btn, .inp, .table { transition: background-color .18s ease, color 
 body.theme-dark .btn {
   background: linear-gradient(180deg,var(--primary),var(--primary-600));
   color: #ffffff;
+  /*color:#000000;*/
   box-shadow: 0 6px 18px rgba(96,165,250,0.25);
 }
 body.theme-dark .btn.secondary {
@@ -213,4 +214,49 @@ body.theme-dark .btn-alt {
   background: rgba(30,41,59,0.8);
   color: var(--primary);
   border: 1px solid rgba(255,255,255,0.15);
+}
+
+/* Ajuste global para textos no modo dark */
+body.theme-dark {
+  color: var(--text); /* Define a cor padrão do texto */
+}
+
+body.theme-dark .muted {
+  color: var(--muted); /* Ajusta textos mais claros */
+}
+
+body.theme-dark h1{
+  /*color: #000000;*/ /* Garante contraste para título principal */
+  color: #f1f5f9;
+}
+body.theme-dark h2, 
+body.theme-dark h3, 
+body.theme-dark h4, 
+body.theme-dark h5, 
+body.theme-dark h6 {
+  color: #000000;
+}
+
+body.theme-dark p, 
+body.theme-dark span, 
+body.theme-dark a {
+  color: #f1f5f9; /* Garante contraste para parágrafos, spans e links */
+}
+
+/* Ajuste de cores para labels e h2 */
+label, h2 {
+  color: #0F172A; /* Preto no modo light */
+}
+
+body.theme-dark label, 
+body.theme-dark h2 {
+  color: #FFFFFF; /* Branco no modo dark */
+}
+
+/* Adicionando estilo para h2 dentro de sections com id começando com "tab" */
+section[id^="tab"] h2 {
+  color: black;
+}
+section[id^="tab"] h3 {
+  color: black;
 }
